@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import Mock, MagicMock
-from reddit_bot import ban_users_for_days, extract_days_from_message, ban_user, unban_user_if_banned_by_bot
+from fash_bot import ban_users_for_days, extract_days_from_message, ban_user, unban_user_if_banned_by_bot
 
 class TestRedditBot(unittest.TestCase):
 
@@ -20,16 +20,23 @@ class TestRedditBot(unittest.TestCase):
     def test_unban_user_if_banned_by_bot(self):
         subreddit_mock = MagicMock()
         user_mock = MagicMock(name="test_user")
+        banned_by_bot_mock = MagicMock()
+        banned_by_bot_mock.user = user_mock
+        banned_by_bot_mock.ban_reason = "Banned by FashBot"
 
-        # Test case where user was banned by FashBot
-        subreddit_mock.banned.return_value = [{'user': user_mock, 'ban_reason': 'Banned by FashBot'}]
+        subreddit_mock.banned.return_value = [banned_by_bot_mock]
         result = unban_user_if_banned_by_bot(subreddit_mock, user_mock)
         self.assertTrue(result)
         subreddit_mock.banned.remove.assert_called_once_with(user_mock)
 
-        # Test case where user was not banned by FashBot
-        subreddit_mock.reset_mock()
-        subreddit_mock.banned.return_value = [{'user': user_mock, 'ban_reason': 'Banned for another reason'}]
+    def test_not_unban_user_if_not_banned_by_bot(self):
+        subreddit_mock = MagicMock()
+        user_mock = MagicMock(name="test_user")
+        not_banned_by_bot_mock = MagicMock()
+        not_banned_by_bot_mock.user = user_mock
+        not_banned_by_bot_mock.ban_reason = "Banned for another reason"
+
+        subreddit_mock.banned.return_value = [not_banned_by_bot_mock]
         result = unban_user_if_banned_by_bot(subreddit_mock, user_mock)
         self.assertFalse(result)
         subreddit_mock.banned.remove.assert_not_called()
